@@ -1,0 +1,2 @@
+import {defineConfig} from 'vite'; import react from '@vitejs/plugin-react';
+export default defineConfig({plugins:[react()],base:'/portfolio/',build:{outDir:'../src/main/resources/static/portfolio',emptyOutDir:true,sourcemap:false,chunkSizeWarningLimit:1150,rollupOptions:{output:{manualChunks:{react:['react','react-dom','framer-motion'],three:['three','@react-three/fiber','@react-three/drei']}}}},server:{proxy:{'/api':'http://localhost:8080'}}});

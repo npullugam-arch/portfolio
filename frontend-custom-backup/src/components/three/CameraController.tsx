@@ -1,0 +1,2 @@
+import {useFrame} from '@react-three/fiber'; import {useThree} from '@react-three/fiber'; import {useReducedMotion} from '../../hooks/useReducedMotion';
+export function CameraController(){const {camera,pointer}=useThree();const reduced=useReducedMotion();useFrame(()=>{const x=reduced?8:8+pointer.x*.12,y=reduced?6:6+pointer.y*.08;camera.position.x+=(x-camera.position.x)*.025;camera.position.y+=(y-camera.position.y)*.025;camera.lookAt(1.8,1.5,0)});return null}

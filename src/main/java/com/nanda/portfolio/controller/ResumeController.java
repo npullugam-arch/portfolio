@@ -1,0 +1,8 @@
+package com.nanda.portfolio.controller;
+import org.springframework.http.*; import org.springframework.web.bind.annotation.*; import java.io.*; import java.nio.charset.StandardCharsets; import java.util.*;
+@RestController public class ResumeController {
+ @GetMapping(value="/resume.pdf",produces=MediaType.APPLICATION_PDF_VALUE)
+ ResponseEntity<byte[]> resume(){return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"inline; filename=\"mohan-resume.pdf\"").cacheControl(CacheControl.noCache()).body(createPlaceholder());}
+ private byte[] createPlaceholder(){try{var out=new ByteArrayOutputStream();var offsets=new ArrayList<Integer>();write(out,"%PDF-1.4\n");String[] objects={"<< /Type /Catalog /Pages 2 0 R >>","<< /Type /Pages /Kids [3 0 R] /Count 1 >>","<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>","<< /Length 106 >>\nstream\nBT /F1 28 Tf 72 700 Td (MOHAN) Tj /F1 13 Tf 0 -32 Td (AI Engineer - Full Stack Developer) Tj 0 -45 Td (Replace this placeholder with your resume.) Tj ET\nendstream"};for(int i=0;i<objects.length;i++){offsets.add(out.size());write(out,(i+1)+" 0 obj\n"+objects[i]+"\nendobj\n");}int xref=out.size();write(out,"xref\n0 6\n0000000000 65535 f \n");for(int offset:offsets)write(out,String.format("%010d 00000 n \n",offset));write(out,"trailer << /Size 6 /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF");return out.toByteArray();}catch(Exception e){throw new IllegalStateException("Unable to create resume",e);}}
+ private void write(ByteArrayOutputStream out,String value)throws IOException{out.write(value.getBytes(StandardCharsets.US_ASCII));}
+}

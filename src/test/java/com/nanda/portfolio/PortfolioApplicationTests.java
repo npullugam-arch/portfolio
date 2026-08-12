@@ -1,0 +1,27 @@
+package com.nanda.portfolio;
+import org.junit.jupiter.api.Test; import org.springframework.beans.factory.annotation.Autowired; import org.springframework.boot.test.context.SpringBootTest; import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc; import org.springframework.test.web.servlet.MockMvc; import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors; import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*; import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+@SpringBootTest @AutoConfigureMockMvc
+class PortfolioApplicationTests {
+ @Autowired MockMvc mvc;
+ @Autowired ObjectMapper json;
+ @Test void contextLoads(){}
+ @Test void portfolioAndLoginArePublic() throws Exception {mvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("/portfolio/index.html"));mvc.perform(get("/admin/login")).andExpect(status().isOk()).andExpect(view().name("admin/login"));}
+ @Test void adminIsProtected() throws Exception {mvc.perform(get("/admin/dashboard")).andExpect(status().is3xxRedirection());}
+ @Test void publicPortfolioApiIsAvailable() throws Exception {mvc.perform(get("/api/portfolio/profile")).andExpect(status().isOk()).andExpect(jsonPath("$.fullName").value("Nanda Kishore"));mvc.perform(get("/api/portfolio/projects")).andExpect(status().isOk()).andExpect(jsonPath("$[0].published").value(true));}
+ @Test void adminManagerAndApiAreProtected() throws Exception {mvc.perform(get("/admin/about")).andExpect(status().is3xxRedirection());mvc.perform(put("/api/admin/profile").contentType("application/json").content("{}")).andExpect(status().isForbidden());}
+ @Test void projectRefreshReturnsPortfolioApp() throws Exception {mvc.perform(get("/project/cubewar")).andExpect(status().isOk()).andExpect(forwardedUrl("/portfolio/index.html"));}
+ @Test void projectCrudSynchronizesWithPublicApi() throws Exception {
+  String create="{\"slug\":\"sync-test-project\",\"name\":\"Sync Test\",\"shortTitle\":\"Created title\",\"thumbnailUrl\":\"https://example.com/created.png\",\"shortDescription\":\"Created description\",\"displayOrder\":99,\"published\":true}";
+  var created=mvc.perform(post("/api/admin/projects").with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN")).with(SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(create)).andExpect(status().isCreated()).andReturn();
+  long id=json.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+  mvc.perform(get("/api/portfolio/projects")).andExpect(status().isOk()).andExpect(header().string("Cache-Control",org.hamcrest.Matchers.containsString("no-store"))).andExpect(jsonPath("$[?(@.slug == 'sync-test-project')].shortTitle").value("Created title"));
+  String update="{\"slug\":\"sync-test-project\",\"name\":\"Sync Test\",\"shortTitle\":\"Updated title\",\"thumbnailUrl\":\"https://example.com/updated.png\",\"shortDescription\":\"Updated description\",\"displayOrder\":99,\"published\":true}";
+  mvc.perform(put("/api/admin/projects/"+id).with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN")).with(SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(update)).andExpect(status().isOk()).andExpect(jsonPath("$.shortTitle").value("Updated title"));
+  mvc.perform(get("/api/portfolio/projects/sync-test-project")).andExpect(status().isOk()).andExpect(jsonPath("$.shortTitle").value("Updated title"));
+  mvc.perform(delete("/api/admin/projects/"+id).with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN")).with(SecurityMockMvcRequestPostProcessors.csrf())).andExpect(status().isNoContent());
+  mvc.perform(get("/api/portfolio/projects")).andExpect(status().isOk()).andExpect(jsonPath("$[?(@.slug == 'sync-test-project')]").isEmpty());
+ }
+ @Test void resumeIsDownloadable() throws Exception {mvc.perform(get("/resume.pdf")).andExpect(status().isOk()).andExpect(content().contentType("application/pdf"));}
+ @Test void contactRequiresCsrfAndAcceptsValidPayload() throws Exception {mvc.perform(post("/api/contact").contentType("application/json").content("{\"name\":\"Mohan\",\"email\":\"mohan@example.com\",\"message\":\"Hello from the portfolio\"}")).andExpect(status().isForbidden());mvc.perform(post("/api/contact").with(SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content("{\"name\":\"Mohan\",\"email\":\"mohan@example.com\",\"message\":\"Hello from the portfolio\"}")).andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("received"));}
+}

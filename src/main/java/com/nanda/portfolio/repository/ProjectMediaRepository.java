@@ -1,0 +1,1 @@
+package com.nanda.portfolio.repository; import com.nanda.portfolio.entity.ProjectMedia; import org.springframework.data.jpa.repository.JpaRepository; public interface ProjectMediaRepository extends JpaRepository<ProjectMedia,Long>{}
