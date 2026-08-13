@@ -8,6 +8,7 @@ class PortfolioApplicationTests {
  @Test void contextLoads(){}
  @Test void portfolioAndLoginArePublic() throws Exception {mvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("/portfolio/index.html"));mvc.perform(get("/admin/login")).andExpect(status().isOk()).andExpect(view().name("admin/login"));}
  @Test void adminIsProtected() throws Exception {mvc.perform(get("/admin/dashboard")).andExpect(status().is3xxRedirection());}
+ @Test void authenticatedAdminDashboardRenders() throws Exception {mvc.perform(get("/admin").with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN"))).andExpect(status().isOk()).andExpect(view().name("admin/dashboard")).andExpect(content().string(org.hamcrest.Matchers.containsString("Dashboard")));}
  @Test void publicPortfolioApiIsAvailable() throws Exception {mvc.perform(get("/api/portfolio/profile")).andExpect(status().isOk()).andExpect(jsonPath("$.fullName").value("Nanda Kishore"));mvc.perform(get("/api/portfolio/projects")).andExpect(status().isOk()).andExpect(jsonPath("$[0].published").value(true));}
  @Test void adminManagerAndApiAreProtected() throws Exception {mvc.perform(get("/admin/about")).andExpect(status().is3xxRedirection());mvc.perform(put("/api/admin/profile").contentType("application/json").content("{}")).andExpect(status().isForbidden());}
  @Test void projectRefreshReturnsPortfolioApp() throws Exception {mvc.perform(get("/project/cubewar")).andExpect(status().isOk()).andExpect(forwardedUrl("/portfolio/index.html"));}
