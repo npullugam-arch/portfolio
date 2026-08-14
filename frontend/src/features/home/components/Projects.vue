@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
-import { previews } from "../../../content/projects/previews";
 import { locale } from "../../../i18n/store";
 import PreviewCard from "../../projects/components/PreviewCard.vue";
 import NotchSection from "../../../components/NotchSection.vue";
@@ -19,21 +18,16 @@ const emit = defineEmits<{
 
 const loadPreviews = async () => {
   if (!locale.value) return;
-  const func = previews[locale.value as keyof typeof previews];
-  if (!func) return;
-  const module = await func();
-  const bundled = module.default as ProjectPreview[];
   const dynamic = portfolio.projects.map(project => {
-    const fallback = bundled.find(item => item.slug === project.slug);
-    return { title: project.shortTitle || project.name, slug: project.slug, thumbnail: project.thumbnailUrl || fallback?.thumbnail || "", description: project.shortDescription || fallback?.description || "" };
+    return { title: project.shortTitle || project.name, slug: project.slug, thumbnail: project.thumbnailUrl || "", description: project.shortDescription || "" };
   });
-  loadedPreviews.value = portfolio.projectsLoaded ? dynamic : bundled;
+  loadedPreviews.value = dynamic;
   emit("loaded", loadedPreviews.value);
 };
 
 watch(locale, loadPreviews);
 watch(
-  () => portfolio.projects,
+  () => [portfolio.projects, portfolio.projectsLoaded],
   loadPreviews,
   { deep: true },
 );

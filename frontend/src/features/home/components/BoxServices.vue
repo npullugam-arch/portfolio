@@ -140,7 +140,7 @@ const serviceColumns = computed(() => {
                   :text="service.name"
                   :steps="1"
                   :duration="0.35"
-                  @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0.15 + (columnIndex * SKILLS_PER_COLUMN + rowIndex) * 0.1)"
+                  @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0.15 + rowIndex * 0.1)"
                 />
               </p>
             </div>

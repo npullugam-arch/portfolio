@@ -2,14 +2,24 @@ export interface ProfileData { fullName:string; professionalTitle?:string; short
 export interface SkillData { id:number; name:string; category?:string; iconUrl?:string; displayOrder:number }
 export interface ProjectData { id:number; slug:string; name:string; shortTitle?:string; thumbnailUrl?:string; shortDescription?:string; projectTitle?:string; projectSubtitle?:string; detailedDescription?:string; liveUrl?:string; githubUrl?:string; displayOrder:number; published:boolean; technologies:{id:number;technologyName:string;displayOrder:number}[]; media:{id:number;mediaType:"IMAGE"|"VIDEO";mediaUrl:string;caption?:string;displayOrder:number}[] }
 export interface ContactData { email?:string; githubUrl?:string; linkedinUrl?:string; twitterUrl?:string; whatsapp?:string; instagramUrl?:string; phone?:string }
-const REQUEST_TIMEOUT_MS=5000;
+const REQUEST_TIMEOUT_MS=15000;
+const MAX_READ_ATTEMPTS=3;
+const RETRY_DELAY_MS=750;
+const wait=(milliseconds:number)=>new Promise(resolve=>window.setTimeout(resolve,milliseconds));
 async function get<T>(path:string):Promise<T>{
- const controller=new AbortController();
- const timeout=window.setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
- try{
-  const response=await fetch(path,{headers:{Accept:"application/json"},signal:controller.signal,cache:"no-store"});
-  if(!response.ok)throw new Error(`Portfolio API ${response.status}`);
-  return response.json();
- }finally{window.clearTimeout(timeout)}
+ let lastError:unknown;
+ for(let attempt=1;attempt<=MAX_READ_ATTEMPTS;attempt++){
+  const controller=new AbortController();
+  const timeout=window.setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
+  try{
+   const response=await fetch(path,{headers:{Accept:"application/json"},signal:controller.signal,cache:"no-store"});
+   if(!response.ok)throw new Error(`Portfolio API ${response.status}`);
+   return await response.json();
+  }catch(error){
+   lastError=error;
+   if(attempt<MAX_READ_ATTEMPTS)await wait(RETRY_DELAY_MS*attempt);
+  }finally{window.clearTimeout(timeout)}
+ }
+ throw lastError;
 }
 export const portfolioApi={profile:()=>get<ProfileData>("/api/portfolio/profile"),skills:()=>get<SkillData[]>("/api/portfolio/skills"),projects:()=>get<ProjectData[]>("/api/portfolio/projects"),project:(slug:string)=>get<ProjectData>(`/api/portfolio/projects/${encodeURIComponent(slug)}`),contact:()=>get<ContactData>("/api/portfolio/contact")};

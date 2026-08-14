@@ -2,30 +2,27 @@
 import { projectId, projectVisible, recentProjectId } from "../../../composables/useRouteObserver";
 import { isTransitioning } from "../../../composables/useProjectTransition";
 import { ref, watch } from "vue";
-import { projectModules } from "../../../content/projects";
 import ProjectContent from "./ProjectContent.vue";
 import Footer from "../../../components/Footer.vue";
 import { locale } from "../../../i18n/store";
 import { lenis } from "../../../composables/useScroll";
 
-import type { Locale } from "../../../i18n/types";
 import { portfolioApi } from "../../../services/portfolioApi";
+import type { ProjectContent as ProjectContentData } from "../../../content/types";
 
 const loading = ref(true);
-const content = ref(null);
+const content = ref<ProjectContentData | null>(null);
 const error = ref<Error | null>(null);
 
 const fetchProject = async (project: string | undefined) => {
+  loading.value = true;
+  error.value = null;
   try {
-    const bundledModule = projectModules[locale.value as Locale][project as string];
-    const bundled = bundledModule ? await bundledModule.default : { title: project, theme: "light", tags: [], components: [] };
-    try {
-      const dynamic = await portfolioApi.project(project as string);
-      const mediaComponents = dynamic.media.map(item => ({type:"media",props:{type:item.mediaType.toLowerCase(),src:item.mediaUrl,caption:item.caption}}));
-      content.value = {...bundled,title:dynamic.projectTitle||dynamic.name,description:dynamic.detailedDescription||dynamic.projectSubtitle||dynamic.shortDescription||bundled.description,live:dynamic.liveUrl||undefined,source:dynamic.githubUrl||undefined,tags:dynamic.technologies.length?dynamic.technologies.map(x=>x.technologyName.trim()).filter(Boolean):bundled.tags,components:mediaComponents.length?mediaComponents:bundled.components};
-    } catch { content.value = bundled; }
-    loading.value = false;
+    const dynamic = await portfolioApi.project(project as string);
+    const mediaComponents = dynamic.media.map(item => ({type:"media" as const,props:{type:item.mediaType.toLowerCase() as "image"|"video",src:item.mediaUrl,caption:item.caption}}));
+    content.value = {title:dynamic.projectTitle||dynamic.name,theme:"light",description:dynamic.detailedDescription||dynamic.projectSubtitle||dynamic.shortDescription||"",live:dynamic.liveUrl||undefined,source:dynamic.githubUrl||undefined,tags:dynamic.technologies.map(x=>x.technologyName.trim()).filter(Boolean),components:mediaComponents};
   } catch (err) {
+    content.value = null;
     error.value = new Error(`Failed to fetch project ${project}`);
   } finally {
     loading.value = false;

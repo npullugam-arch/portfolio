@@ -4,9 +4,7 @@ import ProjectHero from "./ProjectHero.vue";
 import ProjectComponent from "./ProjectComponent.vue";
 import Link from "../../../components/Link.vue";
 import NextProject from "./NextProject.vue";
-import { locale } from "../../../i18n/store";
-import { previews } from "../../../content/projects/previews";
-import { ref, computed, watch, onMounted } from "vue";
+import { computed } from "vue";
 import { portfolio } from "../../../services/portfolioStore";
 
 import type { ProjectContent, ProjectPreview } from "../../../content/types";
@@ -16,27 +14,13 @@ const { content, projectId } = defineProps<{
   projectId: string;
 }>();
 
-const loadedPreviews = ref<ProjectPreview[] | null>(null);
-
-const loadPreviews = async () => {
-  const module = await previews[locale.value as keyof typeof previews]();
-  loadedPreviews.value = module.default;
-};
-
 const nextProject = computed(() => {
-  const bundled = loadedPreviews.value;
-  if (!bundled) return null;
-  const previews = portfolio.projectsLoaded
-    ? portfolio.projects.map((project) => {
-        const fallback = bundled.find((item) => item.slug === project.slug);
-        return {
-          title: project.shortTitle || project.name,
-          slug: project.slug,
-          thumbnail: project.thumbnailUrl || fallback?.thumbnail || "",
-          description: project.shortDescription || fallback?.description || "",
-        };
-      })
-    : bundled;
+  const previews: ProjectPreview[] = portfolio.projects.map((project) => ({
+    title: project.shortTitle || project.name,
+    slug: project.slug,
+    thumbnail: project.thumbnailUrl || "",
+    description: project.shortDescription || "",
+  }));
 
   const currentIndex = previews.findIndex((p) => p.slug === projectId);
   if (currentIndex === -1) return null;
@@ -46,9 +30,6 @@ const nextProject = computed(() => {
   return previews[nextIndex];
 });
 
-watch(locale, loadPreviews);
-
-onMounted(loadPreviews);
 </script>
 
 <template>

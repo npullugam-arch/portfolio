@@ -1,11 +1,11 @@
 package com.nanda.portfolio.controller;
-import com.nanda.portfolio.entity.ContentItem; import com.nanda.portfolio.service.PortfolioService; import jakarta.validation.Valid; import lombok.RequiredArgsConstructor; import org.springframework.stereotype.Controller; import org.springframework.ui.Model; import org.springframework.validation.BindingResult; import org.springframework.web.bind.annotation.*;
+import com.nanda.portfolio.dto.DashboardOverview; import com.nanda.portfolio.entity.ContentItem; import com.nanda.portfolio.service.PortfolioService; import jakarta.validation.Valid; import lombok.RequiredArgsConstructor; import org.springframework.stereotype.Controller; import org.springframework.ui.Model; import org.springframework.validation.BindingResult; import org.springframework.web.bind.annotation.*;
 import java.util.Locale;
 @Controller @RequestMapping("/admin")
 public class AdminController { private final PortfolioService service;
  public AdminController(PortfolioService service){this.service=service;}
  @GetMapping("/login") String login(){return "admin/login";}
- @GetMapping({"","/dashboard"}) String dashboard(Model m){m.addAttribute("overview",service.overview());return "admin/dashboard";}
+ @GetMapping({"","/dashboard"}) String dashboard(Model m){DashboardOverview overview;try{overview=service.overview();}catch(RuntimeException ignored){overview=new DashboardOverview(0,0,0,0,0,0,0,0);}m.addAttribute("overview",overview);return "admin/dashboard";}
  @GetMapping({"/about","/projects","/contact"}) String portfolioManager(){return "admin/portfolio-manager";}
  @GetMapping("/{module}") String module(@PathVariable String module,@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="")String q,Model m){var type=type(module);m.addAttribute("module",module);m.addAttribute("type",type);m.addAttribute("items",service.page(type,page,q));m.addAttribute("item",new ContentItem());return "admin/module";}
  @PostMapping("/{module}") String create(@PathVariable String module,@Valid @ModelAttribute("item") ContentItem item,BindingResult errors,Model m){var type=type(module);if(errors.hasErrors()){m.addAttribute("module",module);m.addAttribute("type",type);m.addAttribute("items",service.page(type,0,""));return "admin/module";}service.save(item,type);return "redirect:/admin/"+module+"?saved";}
