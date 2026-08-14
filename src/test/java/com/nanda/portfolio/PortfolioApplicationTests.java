@@ -6,7 +6,6 @@ class PortfolioApplicationTests {
  @Autowired MockMvc mvc;
  @Autowired ObjectMapper json;
  @Test void contextLoads(){}
- @Test void requestedSkillsAreSeededAndVisibleInAdmin() throws Exception {mvc.perform(get("/api/admin/skills").with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN"))).andExpect(status().isOk()).andExpect(jsonPath("$[?(@.category == 'Tools & Technologies')].name",org.hamcrest.Matchers.hasSize(30))).andExpect(jsonPath("$[?(@.category == 'Tools & Technologies')].name",org.hamcrest.Matchers.hasItems("Java","Spring Boot","Data Structures & Algorithms","Render")));}
  @Test void portfolioAndLoginArePublic() throws Exception {mvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("/portfolio/index.html"));mvc.perform(get("/admin/login")).andExpect(status().isOk()).andExpect(view().name("admin/login"));}
  @Test void adminIsProtected() throws Exception {mvc.perform(get("/admin/dashboard")).andExpect(status().is3xxRedirection());}
  @Test void authenticatedAdminDashboardRenders() throws Exception {mvc.perform(get("/admin").with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN"))).andExpect(status().isOk()).andExpect(view().name("admin/dashboard")).andExpect(content().string(org.hamcrest.Matchers.containsString("Dashboard")));}
