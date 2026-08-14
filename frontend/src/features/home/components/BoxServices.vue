@@ -126,30 +126,41 @@ const SERVICES_DE = [
 const services = computed(() => {
   return portfolio.skills.length ? portfolio.skills : (locale.value === "en" ? SERVICES_EN : SERVICES_DE);
 });
+
+const SKILLS_PER_COLUMN = 20;
+const serviceColumns = computed(() => {
+  const columns = [];
+  for (let index = 0; index < services.value.length; index += SKILLS_PER_COLUMN) {
+    columns.push(services.value.slice(index, index + SKILLS_PER_COLUMN));
+  }
+  return columns;
+});
 </script>
 
 <template>
   <ProjectedElement :point="point">
-    <div ref="wrapperRef" class="box-services">
+    <div ref="wrapperRef" class="box-services" :class="{ 'box-services-multi-column': serviceColumns.length > 1 }">
       <div class="box-services-content">
-        <div class="box-services-title">
-          <AppearingText
-            :text="t('services')"
-            :steps="1"
-            :duration="0.35"
-            @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0)"
-          />
-        </div>
         <div class="box-services-list">
-          <div class="box-services-list-item" v-for="(service, index) in services" :key="service.name">
-            <p class="box-services-list-item-name">
+          <div class="box-services-list-column" v-for="(column, columnIndex) in serviceColumns" :key="columnIndex">
+            <div class="box-services-title">
               <AppearingText
-                :text="service.name"
+                :text="columnIndex === 0 ? t('services') : 'Tools'"
                 :steps="1"
                 :duration="0.35"
-                @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0.15 + index * 0.1)"
+                @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0)"
               />
-            </p>
+            </div>
+            <div class="box-services-list-item" v-for="(service, rowIndex) in column" :key="service.name">
+              <p class="box-services-list-item-name">
+                <AppearingText
+                  :text="service.name"
+                  :steps="1"
+                  :duration="0.35"
+                  @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0.15 + (columnIndex * SKILLS_PER_COLUMN + rowIndex) * 0.1)"
+                />
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -180,6 +191,13 @@ const services = computed(() => {
   @include mixins.landscape-large {
     width: 380px;
     max-width: calc(var(--svw) * 36);
+  }
+
+  &-multi-column {
+    @include mixins.landscape {
+      width: 680px;
+      max-width: calc(var(--svw) * 43);
+    }
   }
 
   &::after,
@@ -236,9 +254,41 @@ const services = computed(() => {
   }
 
   &-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(190px, 1fr);
+    overflow: auto;
+    max-height: min(68svh, 640px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-cyan-400) transparent;
+
+    @media (orientation: portrait), (max-width: 839px) {
+      display: block;
+      max-height: min(58svh, 520px);
+      overflow-x: hidden;
+    }
+
+    &-column {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      min-width: 0;
+      padding-right: var(--space-md);
+
+      & + & {
+        border-left: var(--stroke-sm) solid color-mix(in srgb, var(--color-cyan-400) 55%, transparent);
+        padding-left: var(--space-md);
+      }
+
+      @media (orientation: portrait), (max-width: 839px) {
+        padding-right: 0;
+
+        & + & {
+          border-left: 0;
+          padding-left: 0;
+        }
+      }
+    }
 
     &-item {
       display: flex;
