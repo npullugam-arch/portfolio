@@ -32,7 +32,6 @@ onMounted(async () => {
     },
   });
   tl.fromTo(wrapperRef.value, { scale: 0.8 }, { scale: 1, duration: 0.4, ease: "power1.out" }, 0);
-  tl.fromTo(imageRef.value, { scale: 1.2 }, { scale: 1, duration: 0.4, ease: "power1.out" }, 0);
 
   tlRef.value = tl;
 });
@@ -58,7 +57,14 @@ onUnmounted(() => {
     <div class="preview-card-top" ref="wrapperRef">
       <div class="preview-card-image-wrapper">
         <div class="preview-card-image-container">
-          <img :src="props.preview.thumbnail" :alt="props.preview.title" class="preview-card-image" ref="imageRef" />
+          <img
+            :src="props.preview.thumbnail"
+            :alt="props.preview.title"
+            :draggable="false"
+            @contextmenu.prevent
+            class="preview-card-image"
+            ref="imageRef"
+          />
         </div>
       </div>
       <div class="preview-card-overlay">
@@ -182,14 +188,15 @@ onUnmounted(() => {
   }
 
   &-image {
+    display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
 
     &-container {
-      transition: transform 0.1s ease-in-out;
-      transform: scale(calc(1 + var(--hover) * 0.02));
-      aspect-ratio: 16/9;
+      width: 100%;
     }
 
     &-wrapper {
@@ -202,9 +209,9 @@ onUnmounted(() => {
   &-top {
     position: relative;
     width: 100%;
-    aspect-ratio: 16/9;
 
     &-empty {
+      aspect-ratio: 16/9;
       border: 4px dashed var(--color-grayscale-500);
       border-radius: var(--radius-lg);
       background-color: var(--color-grayscale-400);

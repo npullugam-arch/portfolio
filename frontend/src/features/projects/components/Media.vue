@@ -59,6 +59,8 @@ onMounted(async () => {
         v-if="props.type === 'image'"
         :src="props.src"
         :alt="props.alt"
+        :draggable="false"
+        @contextmenu.prevent
         loading="lazy"
         fetchpriority="high"
         class="project-media-image"
@@ -67,9 +69,16 @@ onMounted(async () => {
       <video
         v-else
         :src="props.src"
-        controls
+        autoplay
+        muted
+        loop
         playsinline
-        preload="metadata"
+        :draggable="false"
+        disablepictureinpicture
+        disableremoteplayback
+        controlslist="nodownload noremoteplayback nofullscreen"
+        @contextmenu.prevent
+        preload="auto"
         class="project-media-video"
         ref="mediaRef"
       >
@@ -92,7 +101,6 @@ onMounted(async () => {
   max-width: 900px;
   justify-self: center;
   position: relative;
-  aspect-ratio: 16 / 9;
 
   @include mixins.mq("md") {
     grid-column: 2 / 12;
@@ -153,15 +161,21 @@ onMounted(async () => {
   }
 
   &-image {
+    display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 
   &-video {
+    display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 
   &-content {
@@ -169,7 +183,7 @@ onMounted(async () => {
     border-radius: var(--radius-lg);
     background-color: var(--color-background-300);
     width: 100%;
-    height: 100%;
+    height: auto;
   }
 }
 </style>

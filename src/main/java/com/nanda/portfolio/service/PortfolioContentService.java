@@ -15,8 +15,8 @@ public class PortfolioContentService {
  public PortfolioContentService(ProfileRepository a,SkillRepository b,PortfolioProjectRepository c,ProjectTechnologyRepository d,ProjectMediaRepository e,ContactInfoRepository f){profiles=a;skills=b;projects=c;technologies=d;media=e;contacts=f;}
  public ProfileData profile(){return profileDto(profiles.findAll().stream().findFirst().orElseGet(Profile::new));}
  public List<SkillData> skills(){return skills.findAllByOrderByDisplayOrderAsc().stream().map(this::skillDto).toList();}
- public List<ProjectData> publicProjects(){return projects.findByPublishedTrueOrderByDisplayOrderAsc().stream().map(this::projectDto).toList();}
- public List<ProjectData> adminProjects(){return projects.findAllByOrderByDisplayOrderAsc().stream().map(this::projectDto).toList();}
+ public List<ProjectData> publicProjects(){return projects.findByPublishedTrueOrderByDisplayOrderAsc().stream().map(this::projectSummaryDto).toList();}
+ public List<ProjectData> adminProjects(){return projects.findAllByOrderByDisplayOrderAsc().stream().map(this::projectSummaryDto).toList();}
  public ProjectData publicProject(String slug){return projectDto(projects.findBySlugAndPublishedTrue(slug).orElseThrow(EntityNotFoundException::new));}
  public ProjectData project(long id){return projectDto(findProject(id));}
  public ContactData contact(){return contactDto(contacts.findAll().stream().findFirst().orElseGet(ContactInfo::new));}
@@ -40,6 +40,7 @@ public class PortfolioContentService {
  private SkillData skillDto(Skill x){return new SkillData(x.getId(),x.getName(),x.getCategory(),x.getIconUrl(),x.getDisplayOrder());}
  private TechnologyData technologyDto(ProjectTechnology x){return new TechnologyData(x.getId(),x.getTechnologyName(),x.getDisplayOrder());}
  private MediaData mediaDto(ProjectMedia x){return new MediaData(x.getId(),x.getMediaType(),x.getMediaUrl(),x.getCaption(),x.getDisplayOrder());}
+ private ProjectData projectSummaryDto(PortfolioProject x){return new ProjectData(x.getId(),x.getSlug(),x.getName(),x.getShortTitle(),x.getThumbnailUrl(),x.getShortDescription(),x.getProjectTitle(),x.getProjectSubtitle(),x.getDetailedDescription(),x.getLiveUrl(),x.getGithubUrl(),x.getDisplayOrder(),x.isPublished(),x.getCreatedAt(),x.getUpdatedAt(),List.of(),List.of());}
  private ProjectData projectDto(PortfolioProject x){return new ProjectData(x.getId(),x.getSlug(),x.getName(),x.getShortTitle(),x.getThumbnailUrl(),x.getShortDescription(),x.getProjectTitle(),x.getProjectSubtitle(),x.getDetailedDescription(),x.getLiveUrl(),x.getGithubUrl(),x.getDisplayOrder(),x.isPublished(),x.getCreatedAt(),x.getUpdatedAt(),x.getTechnologies().stream().map(this::technologyDto).toList(),x.getMedia().stream().map(this::mediaDto).toList());}
  private ContactData contactDto(ContactInfo x){return new ContactData(x.getId(),x.getEmail(),x.getGithubUrl(),x.getLinkedinUrl(),x.getTwitterUrl(),x.getWhatsapp(),x.getInstagramUrl(),x.getPhone());}
 }

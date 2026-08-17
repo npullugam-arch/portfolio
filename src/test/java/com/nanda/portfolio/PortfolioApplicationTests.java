@@ -25,6 +25,13 @@ class PortfolioApplicationTests {
   mvc.perform(delete("/api/admin/projects/"+id).with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN")).with(SecurityMockMvcRequestPostProcessors.csrf())).andExpect(status().isNoContent());
   mvc.perform(get("/api/portfolio/projects")).andExpect(status().isOk()).andExpect(jsonPath("$[?(@.slug == 'sync-test-project')]").isEmpty());
  }
+ @Test void twoProjectPostsCreateTwoSeparateRows() throws Exception {
+  String first="{\"slug\":\"create-one\",\"name\":\"Create One\",\"displayOrder\":101,\"published\":true}";
+  String second="{\"slug\":\"create-two\",\"name\":\"Create Two\",\"displayOrder\":102,\"published\":true}";
+  mvc.perform(post("/api/admin/projects").with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN")).with(SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(first)).andExpect(status().isCreated()).andExpect(jsonPath("$.name").value("Create One"));
+  mvc.perform(post("/api/admin/projects").with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN")).with(SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(second)).andExpect(status().isCreated()).andExpect(jsonPath("$.name").value("Create Two"));
+  mvc.perform(get("/api/admin/projects").with(SecurityMockMvcRequestPostProcessors.user("12345").roles("ADMIN"))).andExpect(status().isOk()).andExpect(jsonPath("$[?(@.slug == 'create-one')]").exists()).andExpect(jsonPath("$[?(@.slug == 'create-two')]").exists());
+ }
  @Test void resumeIsDownloadable() throws Exception {mvc.perform(get("/resume.pdf")).andExpect(status().isOk()).andExpect(content().contentType("application/pdf"));}
  @Test void contactRequiresCsrfAndAcceptsValidPayload() throws Exception {mvc.perform(post("/api/contact").contentType("application/json").content("{\"name\":\"Mohan\",\"email\":\"mohan@example.com\",\"message\":\"Hello from the portfolio\"}")).andExpect(status().isForbidden());mvc.perform(post("/api/contact").with(SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content("{\"name\":\"Mohan\",\"email\":\"mohan@example.com\",\"message\":\"Hello from the portfolio\"}")).andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("received"));}
 }
